@@ -1,0 +1,215 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{microtype}
+\usepackage{multicol}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+\usepackage{color}
+
+\geometry{a4paper,margin=1.85cm}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2.6pt}
+\setlength{\columnsep}{0.75cm}
+
+\setlist[itemize]{
+  topsep=2pt,
+  itemsep=0pt,
+  parsep=0pt,
+  leftmargin=1.4em
+}
+
+\titleformat{\section}
+  {\normalsize\bfseries}{}{0pt}{}
+
+\titlespacing*{\section}{0pt}{6pt}{2pt}
+
+\pagestyle{empty}
+
+\begin{document}
+
+
+% TITLE
+\begin{flushleft}
+
+{\LARGE\bfseries
+Reading Hedgerows from Above:
+Tree Counts and Woody Species Diversity
+from SWISSIMAGE and PlanetScope
+\par}
+
+\vspace{7pt}
+
+{\small
+Geospatial Analysis \quad | \quad
+Project Proposal \quad | \quad
+Jan Landolt \quad | \quad
+25 November 2026
+}
+
+\vspace{5pt}
+\hrule
+
+\end{flushleft}
+
+\vspace{5pt}
+
+% ABSTRACT (FULL WIDTH)
+\section*{Abstract}
+
+Hedgerows are key habitat structures in the Swiss
+agricultural landscape, and their ecological value
+depends strongly on woody species composition: the
+Swiss quality level~II for hedges uses the number of
+tree and shrub species per 10~m as a criterion. Field
+assessment is time-consuming and rarely done at
+landscape scale.
+
+This project develops a workflow that provides, for
+each hedge, (i)~the number of trees, estimated by
+marker-controlled watershed segmentation of SWISSIMAGE
+orthophotos (10~cm), and (ii)~the number of spectrally
+distinct crown types, derived by colour clustering, as
+a proxy for woody species richness. As an optional
+extension, PlanetScope time series (3~m, near-daily)
+could reveal seasonal colour trajectories (green-up,
+flowering, autumn colouring) that separate species
+looking alike in a single summer image.
+\vspace{3pt}
+
+% TWO-COLUMN BODY
+\begin{multicols}{2}
+
+\section*{Research Questions}
+
+\emph{
+(1) How accurately can the number of trees per hedge
+be estimated from SWISSIMAGE using marker-controlled
+watershed segmentation?
+}
+
+\emph{
+(2) To what extent does the number of colour clusters
+per hedge reflect the woody species richness observed
+in the field?
+}
+
+\emph{
+(3, optional) Do PlanetScope phenological trajectories
+improve the separation of species groups compared with
+single-date colour?
+}
+
+\section*{Objectives}
+
+\begin{itemize}
+
+\item Delineate tree crowns and derive tree count and
+density (trees per 100~m) per hedge.
+
+\item Cluster crowns by colour and texture and derive
+cluster number and spectral diversity per hedge.
+
+\item Validate both against field data for a subset of
+hedges; optionally test PlanetScope phenology.
+
+\end{itemize}
+
+
+\section*{Data and Methods}
+
+The workflow will be implemented in Python
+(scikit-image, scikit-learn, rasterio) with
+QGIS. Data: SWISSIMAGE 10~cm (RGB), PlanetScope surface
+reflectance (3~m, near-daily, incl. NIR),
+hedge polygons (Landolt, 2027, Bachelorarbeit) and field reference data
+(tree count, species list) for multible hedges in Kanton Zug.
+
+First, vegetation and shadow masks are derived from
+SWISSIMAGE within each hedge. After Gaussian smoothing,
+local maxima within a window matching the expected
+crown diameter serve as markers for the watershed
+segmentation. Segments below a minimum crown area are
+removed; crowns are counted per hedge and 10~m section.
+
+Second, colour (RGB, HSV, CIELAB) and texture features
+are extracted per crown and grouped with k-means or
+Gaussian mixture models, the number of clusters being
+selected by silhouette score or BIC. The number of
+clusters per hedge and a Shannon index of cluster
+shares serve as spectral diversity measures, following
+the spectral variation hypothesis.
+
+Validation: tree counts against field counts (mean
+absolute error), cluster numbers against species
+counts (Spearman correlation).
+
+
+\section*{Optional Extension: Phenology}
+
+Cloud-masked PlanetScope scenes (March to November)
+are converted into smoothed vegetation index curves
+per hedge section. Start of season, flowering and
+autumn colouring could separate species with similar
+summer colours, e.g.\ blackthorn (flowering before
+leaf-out) and hawthorn (flowering later).
+
+
+\section*{Expected Results and Limitations}
+
+Expected results are a reproducible workflow, crown
+maps and a validated table per hedge (tree count,
+density, cluster number, spectral diversity).
+
+Watershed segmentation of RGB imagery counts visible
+crowns, not stems: overlapping crowns and dense shrubs
+will be under-segmented, and trees and shrubs are hard
+to separate without height data. Colour
+clusters are not species, as illumination, shadow,
+vitality and acquisition date affect colour.
+PlanetScope pixels are coarse relative to hedge width,
+causing mixed pixels with adjacent fields.
+
+{\footnotesize
+\textbf{References.}
+
+Alonzo, M., et al. (2023).
+\emph{Canopy composition drives variability in urban
+growing season length more than the heat island
+effect}.
+Science of the Total Environment, 884, 163818.
+\href{https://doi.org/10.1016/j.scitotenv.2023.163818}
+{doi:10.1016/j.scitotenv.2023.163818}.
+
+Ke, Y., \& Quackenbush, L.\,J. (2011).
+\emph{A review of methods for automatic individual
+tree-crown detection and delineation from passive
+remote sensing}.
+International Journal of Remote Sensing, 32(17),
+4725--4747.
+\href{https://doi.org/10.1080/01431161.2010.494184}
+{doi:10.1080/01431161.2010.494184}.
+
+Rocchini, D., et al. (2010).
+\emph{Remotely sensed spectral heterogeneity as a
+proxy of species diversity: recent advances and open
+challenges}.
+Ecological Informatics, 5(5), 318--329.
+\href{https://doi.org/10.1016/j.ecoinf.2010.06.001}
+{doi:10.1016/j.ecoinf.2010.06.001}.
+
+Swiss Federal Council (2013).
+\href{https://www.fedlex.admin.ch/eli/cc/2013/765/de}
+{\emph{Direct Payments Ordinance (DZV, SR~910.13)}},
+Annex~4.
+}
+
+\end{multicols}
+
+\end{document}

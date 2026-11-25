@@ -1,0 +1,14 @@
+# Satellitendaten: Dateien > 100 MB blockiert GitHub, Planet-Lizenz verbietet Weitergabe
+*.zip
+*.tif
+*.tiff
+PSScene_Visual
+
+# LaTeX-Hilfsdateien
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+build/
