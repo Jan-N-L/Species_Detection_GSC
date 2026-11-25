@@ -10,7 +10,15 @@
 \usepackage{enumitem}
 \usepackage{titlesec}
 \usepackage[hidelinks]{hyperref}
-\usepackage{color}
+\usepackage{xcolor}
+\usepackage{pgfgantt}
+\usepackage{tabularx}
+\usepackage{booktabs}
+
+\definecolor{core}{RGB}{0,100,166}
+\definecolor{opt}{RGB}{230,140,30}
+\definecolor{deadline}{RGB}{190,30,45}
+\newcommand{\legendbox}[1]{\tikz\fill[#1] (0,0) rectangle (0.3,0.2);}
 
 \geometry{a4paper,margin=1.85cm}
 
@@ -28,7 +36,7 @@
 \titleformat{\section}
   {\normalsize\bfseries}{}{0pt}{}
 
-\titlespacing*{\section}{0pt}{6pt}{2pt}
+\titlespacing*{\section}{0pt}{4pt}{2pt}
 
 \pagestyle{empty}
 
@@ -39,7 +47,7 @@
 \begin{flushleft}
 
 {\LARGE\bfseries
-Reading Hedgerows from Above:
+Project Proposal:
 Tree Counts and Woody Species Diversity
 from SWISSIMAGE and PlanetScope
 \par}
@@ -47,10 +55,9 @@ from SWISSIMAGE and PlanetScope
 \vspace{7pt}
 
 {\small
-Geospatial Analysis \quad | \quad
-Project Proposal \quad | \quad
-Jan Landolt \quad | \quad
-25 November 2026
+Geospatial Analysis, Terrain \& Water (C) \quad | \quad
+Jan Landolt, landoja2@students.zhaw.ch \quad | \quad
+25. November 2026
 }
 
 \vspace{5pt}
@@ -89,15 +96,15 @@ looking alike in a single summer image.
 \section*{Research Questions}
 
 \emph{
-(1) How accurately can the number of trees per hedge
-be estimated from SWISSIMAGE using marker-controlled
-watershed segmentation?
+(1) How well can individual trees per hedge be
+delineated and counted from SWISSIMAGE using
+marker-controlled watershed segmentation?
 }
 
 \emph{
 (2) To what extent does the number of colour clusters
-per hedge reflect the woody species richness observed
-in the field?
+per hedge plausibly reflect its woody species
+composition?
 }
 
 \emph{
@@ -116,39 +123,79 @@ density (trees per 100~m) per hedge.
 \item Cluster crowns by colour and texture and derive
 cluster number and spectral diversity per hedge.
 
-\item Validate both against field data for a subset of
-hedges; optionally test PlanetScope phenology.
+\item Check both visually against SWISSIMAGE and, where
+available, Kanton Zug hedge data for a subset of
+hedges. Optionally test PlanetScope phenology.
 
 \end{itemize}
 
 
+\section*{Delimitation from Parent Project}
+
+The parent project is my bachelor thesis
+\emph{Automated detection and mapping of hedgerow
+structures with LiDAR data -- potential and limits for
+monitoring in Switzerland} (ZHAW/WSL, submission
+January 2027). It derives hedge polygons and general structural
+attributes for Kanton Zug from airborne LiDAR and gives
+recommendations for the LABES monitoring.
+
+The thesis asks \emph{where} hedges are and \emph{how
+they are built}; this project asks \emph{what they
+consist of}. It primary uses optical imagery, works at
+crown level inside the given polygons and applies
+methods that are not part of the thesis. The thesis polygons
+serve as input only and they are neither re-derived nor evaluated here.
+
+\vspace{2pt}
+{\footnotesize
+\begin{tabularx}{\columnwidth}{@{}>{\bfseries}p{1.25cm}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}X@{}}
+\toprule
+ & Bachelor Thesis) & This project \\
+\midrule
+Question & Where are hedges, how are they built?
+  & What do hedges consist of? \\
+Data & Airborne LiDAR & SWISSIMAGE RGB, PlanetScope \\
+Methods & Point-cloud metrics, classification of
+  hedge vs.\ non-hedge
+  & Watershed, colour clustering, phenology \\
+\bottomrule
+\end{tabularx}
+}
+
+
 \section*{Data and Methods}
 
-The workflow will be implemented in Python
-(scikit-image, scikit-learn, rasterio) with
+The workflow will be implemented in Python or R
+(scikit-image, scikit-learn, rasterio) and visualised with
 QGIS. Data: SWISSIMAGE 10~cm (RGB), PlanetScope surface
 reflectance (3~m, near-daily, incl. NIR),
-hedge polygons (Landolt, 2027, Bachelorarbeit) and field reference data
-(tree count, species list) for multible hedges in Kanton Zug.
+hedge polygons (Landolt, 2027 [Bachelor-Thesis]) and, where
+available, hedge data from Kanton Zug (e.g.\ species lists)
+as visual reference.
 
-First, vegetation and shadow masks are derived from
-SWISSIMAGE within each hedge. After Gaussian smoothing,
-local maxima within a window matching the expected
+Local maxima within a window matching the expected
 crown diameter serve as markers for the watershed
 segmentation. Segments below a minimum crown area are
 removed; crowns are counted per hedge and 10~m section.
 
-Second, colour (RGB, HSV, CIELAB) and texture features
-are extracted per crown and grouped with k-means or
-Gaussian mixture models, the number of clusters being
+Second, colour (and texture features)
+are extracted per crown and all data are grouped (k-means or
+Gaussian mixture models), the number of clusters being
 selected by silhouette score or BIC. The number of
 clusters per hedge and a Shannon index of cluster
-shares serve as spectral diversity measures, following
-the spectral variation hypothesis.
+shares serve as spectral diversity measures.
 
-Validation: tree counts against field counts (mean
-absolute error), cluster numbers against species
-counts (Spearman correlation).
+Validation: for time reasons, validation is visual
+only. Crown segments and colour clusters are overlaid
+on SWISSIMAGE and, where available, compared with
+Kanton Zug hedge data for a subset of hedges. Typical
+errors (missed, merged or split crowns; clusters
+mixing species) are described qualitatively. No field
+survey and no statistical accuracy assessment are
+carried out.
 
 
 \section*{Optional Extension: Phenology}
@@ -164,8 +211,8 @@ leaf-out) and hawthorn (flowering later).
 \section*{Expected Results and Limitations}
 
 Expected results are a reproducible workflow, crown
-maps and a validated table per hedge (tree count,
-density, cluster number, spectral diversity).
+maps and a visually checked table per hedge (tree
+count, density, cluster number, spectral diversity).
 
 Watershed segmentation of RGB imagery counts visible
 crowns, not stems: overlapping crowns and dense shrubs
@@ -174,7 +221,8 @@ to separate without height data. Colour
 clusters are not species, as illumination, shadow,
 vitality and acquisition date affect colour.
 PlanetScope pixels are coarse relative to hedge width,
-causing mixed pixels with adjacent fields.
+causing mixed pixels with adjacent fields. The visual
+validation gives no quantitative accuracy measure.
 
 {\footnotesize
 \textbf{References.}
@@ -211,5 +259,232 @@ Annex~4.
 }
 
 \end{multicols}
+
+
+% TIMELINE (FULL WIDTH)
+\section*{Timeline}
+
+Two variants: \textbf{(A)} core project only (Rsearch Questions~1--2)
+with buffer, and \textbf{(B)} including the optional
+phenology extension (Rsearch Questions~3). Variant~B is started only if
+crown segmentation runs on all hedges by the go/no-go
+date (11.12.); otherwise variant~A applies. Both account for the thesis
+submission on the same day as the report (14.01.2027).
+
+\vspace{7pt}
+
+\vspace{4pt}
+{\footnotesize
+\legendbox{core}~Core \quad
+\legendbox{opt}~Optional \quad
+\legendbox{black!45}~Writing \quad
+\legendbox{black!12}~Break / buffer \quad
+\tikz\fill[deadline] (0,0) -- (0.12,0.12) -- (0.24,0)
+  -- (0.12,-0.12) -- cycle;~Deadline
+}
+
+\ganttset{
+  time slot format=isodate,
+  x unit=0.19cm,
+  y unit title=0.4cm,
+  y unit chart=0.42cm,
+  title label font=\scriptsize,
+  title/.style={draw=black!30, fill=black!5},
+  canvas/.style={draw=black!30},
+  vgrid={*6{draw=none},*1{black!30,dotted}},
+  bar height=0.6,
+  bar top shift=0.2,
+  bar/.style={draw=none, fill=core},
+  bar label font=\footnotesize,
+  milestone label font=\footnotesize,
+  milestone/.style={shape=diamond, inner sep=0pt,
+    draw=none, fill=black},
+  milestone height=0.6,
+  milestone top shift=0.2,
+}
+\tikzset{
+  write/.style={draw=none, fill=black!45},
+  brk/.style={draw=none, fill=black!12},
+  optbar/.style={draw=none, fill=opt},
+}
+\newcommand{\gantthead}{%
+  \gantttitle{Nov}{8}
+  \gantttitle{December 2026}{31}
+  \gantttitle{January 2027}{24} \\
+  \gantttitle{CW48}{7} \gantttitle{CW49}{7}
+  \gantttitle{CW50}{7} \gantttitle{CW51}{7}
+  \gantttitle{CW52}{7} \gantttitle{CW53}{7}
+  \gantttitle{CW1}{7} \gantttitle{CW2}{7}
+  \gantttitle{CW3}{7} \\
+}
+\newcommand{\ms}[3][black]{%
+  \ganttmilestone[milestone/.style={shape=diamond,
+    inner sep=0pt, draw=none, fill=#1}]{#2}{#3}}
+
+\vspace{6pt}
+\textbf{Variant A -- core only (Rsearch Questions 1--2)}\par
+\vspace{3pt}
+\begin{ganttchart}{2026-11-23}{2027-01-24}
+\gantthead
+\ms{Proposal, coaching}{2026-11-25} \ms{}{2026-12-02} \\
+\ganttbar{Data preparation}{2026-11-26}{2026-12-04} \\
+\ganttbar{Crown segmentation (RQ 1)}{2026-12-03}{2026-12-12} \\
+\ganttbar{Colour clustering (RQ 2)}{2026-12-09}{2026-12-17} \\
+\ganttbar{Validation \& figures}{2026-12-14}{2026-12-19} \\
+\ganttbar[bar/.style=write]{Report writing}{2026-12-16}{2026-12-19}
+  \ganttbar[bar/.style=write]{}{2027-01-05}{2027-01-10} \\
+\ganttbar[bar/.style=brk]{Christmas break / buffer}{2026-12-20}{2027-01-04}
+  \ganttbar[bar/.style=brk]{}{2027-01-11}{2027-01-13} \\
+\ms[deadline]{Report \& thesis due, exam}{2027-01-14} \ms{}{2027-01-18}
+\end{ganttchart}
+
+\vspace{6pt}
+\textbf{Variant B -- with optional phenology (Rsearch Questions 1--3)}\par
+\vspace{3pt}
+\begin{ganttchart}{2026-11-23}{2027-01-24}
+\gantthead
+\ms{Proposal, coaching}{2026-11-25} \ms{}{2026-12-02} \\
+\ganttbar{Data prep.\ incl.\ PlanetScope}{2026-11-26}{2026-12-04} \\
+\ganttbar{Crown segmentation (RQ 1)}{2026-12-03}{2026-12-10} \\
+\ganttbar{Colour clustering (RQ 2)}{2026-12-08}{2026-12-15} \\
+\ms[opt]{Go/no-go optional part}{2026-12-11} \\
+\ganttbar[bar/.style=optbar]{Phenology curves (RQ 3)}{2026-12-12}{2026-12-19} \\
+\ganttbar[bar/.style=optbar]{Phenology vs.\ colour}{2027-01-05}{2027-01-07} \\
+\ganttbar{Validation \& figures}{2026-12-15}{2026-12-19}
+  \ganttbar{}{2027-01-06}{2027-01-08} \\
+\ganttbar[bar/.style=write]{Report writing}{2027-01-07}{2027-01-12} \\
+\ganttbar[bar/.style=brk]{Christmas break / buffer}{2026-12-20}{2027-01-04}
+  \ganttbar[bar/.style=brk]{}{2027-01-13}{2027-01-13} \\
+\ms[deadline]{Report \& thesis due}{2027-01-14} \ms{}{2027-01-18}
+\end{ganttchart}
+
+
+% RISK ANALYSIS (FULL WIDTH)
+\newpage
+\section*{Risk Analysis \& Plan B}
+
+\textbf{SWOT.}
+\vspace{2pt}
+
+{\footnotesize
+\setlist[itemize]{nosep, leftmargin=1.1em}
+\begin{tabularx}{\textwidth}{@{}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Strengths}
+\begin{itemize}
+\item Hedge polygons and study area ready from the
+  thesis.
+\item SWISSIMAGE is free and nationwide: workflow is
+  transferable to all of Switzerland.
+\item Simple, well-documented methods (watershed,
+  k-means/GMM) on an open Python stack.
+\end{itemize}
+&
+\textbf{Weaknesses}
+\begin{itemize}
+\item Counts visible crowns, not stems.
+\item Colour clusters are not always pecies.
+\item Visual validation only, no quantitative
+  accuracy.
+\end{itemize}
+\\ \midrule
+\textbf{Opportunities}
+\begin{itemize}
+\item Composition indicator complements LiDAR structure
+  for hedge quality (DZV quality level~II).
+\item Phenology may separate early-flowering species
+  (blackthorn vs.\ hawthorn).
+\end{itemize}
+&
+\textbf{Threats}
+\begin{itemize}
+\item Cloud gaps in PlanetScope during key windows
+  (spring flowering).
+\item Mixed pixels: hedges are often narrower than
+  2--3 PlanetScope pixels.
+\item Illumination and date differences between
+  SWISSIMAGE flight strips.
+\end{itemize}
+\\ \bottomrule
+\end{tabularx}
+}
+
+\vspace{6pt}
+\textbf{Risks and Plan B.}
+\vspace{2pt}
+
+{\footnotesize
+\begin{tabularx}{\textwidth}{@{}
+  >{\raggedright\arraybackslash}p{4.4cm}
+  >{\raggedright\arraybackslash}p{1.6cm}
+  >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Risk} & \textbf{Likelihood} &
+  \textbf{Mitigation / Plan B} \\
+\midrule
+Time conflict with thesis submission (14.01.2027)
+  & High
+  & Front-load analysis to December; start optional
+    part only after go/no-go on 11.12.; fall back to
+    variant~A. \\
+Watershed over-/under-segments dense hedges
+  & Medium
+  & Tune smoothing and window size on one training
+    hedge. Plan B: report crown density per 10~m
+    section instead of single-tree counts. \\
+Colour clusters do not reflect species richness
+  & Medium
+  & Report as a negative result. Plan B: test
+    texture-only and CIELAB features, aggregate to
+    species groups (e.g.\ conifer vs.\ broadleaf). \\
+No Kanton Zug reference data for the study hedges
+  & Medium
+  & Plan B: visual check on SWISSIMAGE only; species
+    interpretation of clusters stays qualitative. \\
+PlanetScope cloud gaps or mixed pixels
+  & High
+  & Use only wide hedges and an inner buffer.
+    Plan B: drop the optional part; core results
+    (Rsearch Questions~1--2) are not affected. \\
+Colour differences between SWISSIMAGE tiles
+  & Medium
+  & Normalise colour per hedge; compare hedges from the
+    same flight date only. \\
+\bottomrule
+\end{tabularx}
+}
+
+
+% COACHING QUESTIONS (LAST)
+\section*{Questions for the Coaching Session}
+
+\begin{enumerate}[topsep=2pt, itemsep=1pt, leftmargin=1.4em]
+
+\item \textbf{Delimitation:} Is it acceptable to use the
+hedge polygons from my thesis as input? And could the
+LiDAR canopy height model serve as Plan~B for crown
+markers, or does that blur the line to the parent
+project?
+
+\item \textbf{Scope:} Is the core project (Rsearch Questions~1--2)
+sufficient for the module, with phenology as an
+optional extension?
+
+\item \textbf{Validation:} Is a purely visual
+validation (SWISSIMAGE, Kanton Zug data where
+available) acceptable for the module, or is a small
+quantitative check expected?
+
+\item \textbf{Software:} Is a Python workflow
+(scikit-image, scikit-learn) fine, or should the
+analysis be implemented in R?
+
+\item \textbf{Block:} Does the project fit Terrain \&
+Water (raster analysis), or rather Spatial Ecology \&
+Occurrence?
+
+\end{enumerate}
 
 \end{document}

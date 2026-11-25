@@ -12,3 +12,6 @@ PSScene_Visual
 *.out
 *.synctex.gz
 build/
+
+# Div
+proposal-template
